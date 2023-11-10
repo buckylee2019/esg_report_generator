@@ -1,0 +1,5 @@
+pdfs/*
+react_doc.ipynb
+.env
+__pycache__/*
+
