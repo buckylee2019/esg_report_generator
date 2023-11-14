@@ -16,8 +16,8 @@ import io
 from langchain.text_splitter import CharacterTextSplitter
 
 text_splitter = CharacterTextSplitter(
-    separator = "。\n\n",
-    chunk_size = 200,
+    separator = "。",
+    chunk_size = 250,
     chunk_overlap  = 20,
     length_function = len,
     is_separator_regex = False,
@@ -89,20 +89,15 @@ def toDocuments(documents):
         else:
             langchain_doc.append(Document(page_content=doc))
     return langchain_doc
-# hf2 = HuggingFaceEmbeddings(model_name="GanymedeNil/text2vec-large-chinese")
 
-# index = Chroma.from_documents(
-#         documents=documents,
-#         embedding=hf,
-#         collection_name=INDEX_NAME,
-#         persist_directory=INDEX_NAME
-#     )
-PDF_DIR = "/Users/buckylee/Documents/github/watsonxai-foundations-class/self-guided-labs/level-2/React/pdfs/GRI/"
+
+PDF_DIR = "./pdfs/ESG/"
 INDEXED = False
 for pdf in glob(PDF_DIR+"*.pdf"):
     
     collection_name = "GRI"
-    
+    collection_name = pdf.split('/')[-1].split('.')[-2]
+
     if not INDEXED:
         extracted = extract_text_table(pdf)
         docstore = Chroma.from_documents(

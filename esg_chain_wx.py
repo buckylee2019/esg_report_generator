@@ -24,10 +24,10 @@ import chromadb
 
 load_dotenv()
 params = {
-    GenParams.DECODING_METHOD: "sample",
+    GenParams.DECODING_METHOD: "greedy",
     GenParams.MIN_NEW_TOKENS: 30,
-    GenParams.MAX_NEW_TOKENS: 300,
-    GenParams.TEMPERATURE: 0.2,
+    GenParams.MAX_NEW_TOKENS: 1024,
+    GenParams.TEMPERATURE: 0,
     # GenParams.TOP_K: 100,
     # GenParams.TOP_P: 1,
     GenParams.REPETITION_PENALTY: 1
@@ -104,7 +104,7 @@ def generate_standard_chain(vectorstore):
     2. Standard index, e.g, 2.1.a or 2.1.b etc.
     3. Fields that should include in generating esg report.
     Standard: {question}
-    Extracted detailed standard:[/INST]
+    Answer: [/INST]
     """
     prompt = PromptTemplate.from_template(template)
 
@@ -124,19 +124,18 @@ def generate_esg_chain(user_prompt,qa_chain,vector_instance):
         '''[INST]<<SYS>>
         Based on the past report,you should ONLY use the most relevant document 'Past Report' to summarize the key information that must contain in the report. Using following format to generate the report template.
         Format:
-        Only use the 揭露項目 in STANDARD to generate answer.
-        1. Title of the standard
-        2. key information or essential field. 
-        3. Add example to essure everyone understand the field.
         
+        1. Title of the report.
+        2. key information or essential field that should prensent in new report by given past report
+        3. Add example to essure everyone understand the field.
+        4. what standard were followed by report
         <</SYS>>
 
         % Past Report
         {summarize}
         % STANDARD
         {question}
-        
-        ESG 報告模板: [/INST]'''
+        Based on Past Report, generate New ESG Report: [/INST]'''
     )
 
     # chain2 = (
@@ -147,7 +146,7 @@ def generate_esg_chain(user_prompt,qa_chain,vector_instance):
     # )
     qa_chain_esg = (
         {
-            "summarize": qa_chain| vector_instance.as_retriever(search_type="mmr", search_kwargs={'k': 2})| _combine_documents,
+            "summarize": qa_chain| vector_instance.as_retriever(search_type="mmr", search_kwargs={'k': 3})| _combine_documents,
             "question": itemgetter("question")
         }
         | prompt
