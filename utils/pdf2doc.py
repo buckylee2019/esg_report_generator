@@ -7,7 +7,7 @@ from langchain.docstore.document import Document
 from langchain.vectorstores import Chroma
 from dotenv import load_dotenv
 from langchain.embeddings import HuggingFaceEmbeddings, SentenceTransformerEmbeddings
-
+import sys
 from langchain.embeddings import HuggingFaceHubEmbeddings
 from langchain.vectorstores import Milvus
 from dotenv import load_dotenv
@@ -25,16 +25,11 @@ text_splitter = CharacterTextSplitter(
 
 load_dotenv()
 
-BUCKET_NAME = os.getenv("BUCKET_NAME")
-MINIO_OBJECT_URL = os.environ.get("MINIO_OBJECT_URL")
-MINIO_PUBLIC_URL = os.environ.get("MINIO_PUBLIC_IP")
+
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
 embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
 INDEX_NAME = os.getenv("INDEX_NAME")
 
-PARENT_IMG_DIR = "/app/data/images"
-
-repo_id = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
 # hf = HuggingFaceHubEmbeddings(
 #     task="feature-extraction",
@@ -91,29 +86,36 @@ def toDocuments(documents):
     return langchain_doc
 
 
-PDF_DIR = "./pdfs/ESG/"
-INDEXED = False
-for pdf in glob(PDF_DIR+"*.pdf"):
-    
-    collection_name = "GRI"
-    collection_name = pdf.split('/')[-1].split('.')[-2]
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print('no argument')
+        sys.exit()
 
-    if not INDEXED:
-        extracted = extract_text_table(pdf)
-        docstore = Chroma.from_documents(
-                documents=toDocuments(extracted['text']),
-                embedding=embeddings,
-                collection_name=collection_name,
-                persist_directory=os.environ.get("INDEX_NAME")
-            )
-    else:
-        docstore = Chroma(
-                embedding_function=embeddings,
-                collection_name=collection_name,
-                persist_directory=os.environ.get("INDEX_NAME")
-            )
+    PDF_DIR = sys.argv[1]
+    INDEXED = False
+    for pdf in glob(os.path.join(PDF_DIR, "*.pdf")):
+        
+        if "GRI" in PDF_DIR:
+            collection_name = "GRI"
+        elif "ESG" in PDF_DIR:
+            collection_name = pdf.split('/')[-1].split('.')[-2]
+
+        if not INDEXED:
+            extracted = extract_text_table(pdf)
+            docstore = Chroma.from_documents(
+                    documents=toDocuments(extracted['text']),
+                    embedding=embeddings,
+                    collection_name=collection_name,
+                    persist_directory=os.environ.get("INDEX_NAME")
+                )
+        else:
+            docstore = Chroma(
+                    embedding_function=embeddings,
+                    collection_name=collection_name,
+                    persist_directory=os.environ.get("INDEX_NAME")
+                )
 
 
-print(docstore.similarity_search("報導總部的所在位置:總部指的是一個組織的行政中心，其控制和指引組織本身。"))
+    print(docstore.similarity_search("報導總部的所在位置:總部指的是一個組織的行政中心，其控制和指引組織本身。"))
 
 
