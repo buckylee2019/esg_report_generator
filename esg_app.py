@@ -1,6 +1,6 @@
 import streamlit as st
 import numpy as np
-from utils.esg_chain import GenerateStandardChain,GenerateEsgChain,framework,get_collection_list, vectorDB,TranslateChain,Generate
+from utils.esg_chain_wx import GenerateStandardChain,GenerateEsgChain,framework,get_collection_list, vectorDB,TranslateChain,Generate
 
 
 st.title("ESG 報告建議")

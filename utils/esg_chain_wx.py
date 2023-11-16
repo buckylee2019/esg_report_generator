@@ -3,28 +3,24 @@ from langchain.agents import initialize_agent, Tool
 from langchain.agents import AgentType
 from os import environ
 from dotenv import load_dotenv
-from genai.model import Credentials
-from ibm_watson_machine_learning.metanames import GenTextParamsMetaNames as GenParams
-from langChainInterface import LangChainInterface
 import json
 from langchain.vectorstores import Chroma
 from glob import glob
 import os
-from langchain.chains import RetrievalQA
-from langchain.schema.runnable import RunnableMap
 from langchain.schema import format_document
 from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
-from langchain.chains import SimpleSequentialChain
 from operator import itemgetter
 from langchain.schema import StrOutputParser
-from langchain.chat_models import ChatOpenAI
+from ibm_watson_machine_learning.metanames import GenTextParamsMetaNames as GenParams
+from ibm_watson_machine_learning.foundation_models.utils.enums import DecodingMethods
+from ibm_watson_machine_learning.foundation_models import Model
+from ibm_watson_machine_learning.foundation_models.utils.enums import ModelTypes
 import chromadb
 
 load_dotenv()
 params = {
-    GenParams.DECODING_METHOD: "greedy",
+    GenParams.DECODING_METHOD: DecodingMethods.GREEDY,
     GenParams.MIN_NEW_TOKENS: 30,
     GenParams.MAX_NEW_TOKENS: 1024,
     GenParams.TEMPERATURE: 0,
@@ -45,7 +41,7 @@ else:
         "url": ibm_cloud_url,
         "apikey": api_key 
     }
-llm = LangChainInterface(model='meta-llama/llama-2-70b-chat', credentials=creds, params=params, project_id=project_id)
+llm = Model(model_id="meta-llama/llama-2-70b-chat", credentials=creds, params=params, project_id=project_id).to_langchain()
 
 embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
 class vectorDB():
@@ -174,6 +170,34 @@ def TranslateChain(text):
         | StrOutputParser()
     )
     return trans.invoke({"original_text": text}) 
+
+def Generate(prompt):
+    params = {
+    GenParams.DECODING_METHOD: DecodingMethods.GREEDY,
+    GenParams.MIN_NEW_TOKENS: 30,
+    GenParams.MAX_NEW_TOKENS: 1024,
+    GenParams.TEMPERATURE: 0,
+    # GenParams.TOP_K: 100,
+    # GenParams.TOP_P: 1,
+    GenParams.REPETITION_PENALTY: 1
+}
+    ibm_cloud_url = os.getenv("IBM_CLOUD_URL", None)
+    project_id = os.getenv("PROJECT_ID", None)
+
+    creds = {
+        "url": ibm_cloud_url,
+        "apikey": api_key 
+    }
+
+    WX_MODEL = os.environ.get("WX_MODEL")
+
+    llm = Model(
+                    model_id="meta-llama/llama-2-70b-chat",
+                    credentials=creds,
+                    params=params,
+                    project_id=project_id
+                ).to_langchain()
+    return llm(prompt)
 def framework():
     guideline = {
         "2.6 活動、價值鏈和其他商業關係":"""揭露項目 2-6 活動、價值鏈和其他商業關係
