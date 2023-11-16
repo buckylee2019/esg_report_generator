@@ -83,35 +83,32 @@ def get_collection_list():
 
 def GenerateStandardChain(vectorstore):
 
-    template = """[INST]<<SYS>>
-    You'll be responsible for writing ESG (Environmental, Social, and Governance) reports, which are vital to our organization. We need to ensure that our ESG reports are accurate and transparent to meet the expectations of our shareholders and stakeholders. Let's get started.
-    You'll bed provided with previous ESG reports as references. This will help you understand our style and content. 
-    Our ESG reports follow specific ESG frameworks, such as GRI, SASB, etc. You are familiar with the structure and key indicators of these frameworks.
-    <</SYS>>
+#     template = """<s>[INST] <<SYS>>
+# INSTRUCTION:
+# 你是一位ESG報告專家。分析ESG frameword 並用中文回答。
+# Please answer in Chinese, you are the esg report advisor.You will be provided standard of ESG framework and some related documents. 
+# If answer can be found exactly in Documents answer the original standard. If not exactly the same, summarize and answer it.
+# Produce the answer using the steps as below.
+#         Step 1: Understand the Standard.
+#         Step 2: WRITE the ENGLISH answer.
+#         Step 3: Translate the ENGLISH answer into Chinese language.
+# AVOID the new line as much as possible.
+# Start your response with 'Sure, I can answer in Chinese. Here's my response:'
+# <</SYS>>
+# INPUT:
+# Documents: 
+# {context}
+# Standard: {question}
+# Step 1: Understand Standard
+# Step 2: ENGLISH ANSWER:
+# Step 3: TRADITIONAL CHINESE TRANSLATED ANSWER:
+# [/INST]
+#     '''
+#     """
+#     prompt = PromptTemplate.from_template(template)
 
-
-    According to the retrieved documents, summarize Standard field with given format.
-
-    % Documents
-    {context}
-    Format:
-    1. Step by step instruction of how to generate report
-    2. Standard index, e.g, 2.1.a or 2.1.b etc.
-    3. Fields that should include in generating esg report.
-    Standard: {question}
-    Extracted detailed standard:[/INST]
-    """
-    prompt = PromptTemplate.from_template(template)
-
-    qa_chain = (
-        {
-            "context": itemgetter("question") | vectorstore.as_retriever(search_type="mmr", search_kwargs={'k': 2})| _combine_documents,
-            "question": itemgetter("question")
-        }
-        | prompt
-        | llm
-        | StrOutputParser()
-    )
+    qa_chain = itemgetter("question") | vectorstore.as_retriever(search_type="mmr", search_kwargs={'k': 2})| _combine_documents
+    
     return qa_chain
 def GenerateEsgChain(user_prompt,qa_chain,vector_instance):
     
@@ -142,7 +139,7 @@ def GenerateEsgChain(user_prompt,qa_chain,vector_instance):
     # )
     qa_chain_esg = (
         {
-            "summarize": qa_chain| vector_instance.as_retriever(search_type="mmr", search_kwargs={'k': 3})| _combine_documents,
+            "summarize":qa_chain | vector_instance.as_retriever(search_type="mmr", search_kwargs={'k': 4})| _combine_documents,
             "question": itemgetter("question")
         }
         | prompt
