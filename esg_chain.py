@@ -32,7 +32,7 @@ params = GenerateParams(
         top_p=1,
     )
 
-llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo-1106")
+
 WX_MODEL = os.environ.get("WX_MODEL")
 creds = Credentials(os.environ.get("BAM_API_KEY"), "https://bam-api.res.ibm.com/v1")
 
@@ -81,7 +81,7 @@ def get_collection_list():
     client = chromadb.PersistentClient(path=os.environ.get("INDEX_NAME"))
     return [cols.name for cols in client.list_collections() if cols.name!="GRI"]
 
-def generate_standard_chain(vectorstore):
+def GenerateStandardChain(vectorstore):
 
     template = """[INST]<<SYS>>
     You'll be responsible for writing ESG (Environmental, Social, and Governance) reports, which are vital to our organization. We need to ensure that our ESG reports are accurate and transparent to meet the expectations of our shareholders and stakeholders. Let's get started.
@@ -113,7 +113,7 @@ def generate_standard_chain(vectorstore):
         | StrOutputParser()
     )
     return qa_chain
-def generate_esg_chain(user_prompt,qa_chain,vector_instance):
+def GenerateEsgChain(user_prompt,qa_chain,vector_instance):
     
     prompt = PromptTemplate.from_template(
         '''[INST]<<SYS>>
@@ -142,7 +142,7 @@ def generate_esg_chain(user_prompt,qa_chain,vector_instance):
     # )
     qa_chain_esg = (
         {
-            "summarize": qa_chain| vector_instance.as_retriever(search_type="mmr", search_kwargs={'k': 2})| _combine_documents,
+            "summarize": qa_chain| vector_instance.as_retriever(search_type="mmr", search_kwargs={'k': 3})| _combine_documents,
             "question": itemgetter("question")
         }
         | prompt
@@ -151,7 +151,7 @@ def generate_esg_chain(user_prompt,qa_chain,vector_instance):
     )
 
     return qa_chain_esg.invoke({"question": user_prompt}) 
-def translate_chain(text):
+def TranslateChain(text):
     prompt =  PromptTemplate.from_template("""
     English: The Board of Directors is responsible for overseeing the bank's operations, including its financial performance, risk management, and corporate governance practices.
     Chinese: 董事會負責監督銀行的運營，包括財務績效、風險管理和公司治理實務。
@@ -169,6 +169,27 @@ def translate_chain(text):
         | StrOutputParser()
     )
     return trans.invoke({"original_text": text}) 
+def Generate(prompt):
+    params = GenerateParams(
+        decoding_method="greedy",
+        max_new_tokens=1024,
+        min_new_tokens=1,
+        stop_sequences=["。\n\n"],
+        stream=False,
+        top_k=50,
+        top_p=1,
+    )
+
+
+    WX_MODEL = os.environ.get("WX_MODEL")
+    creds = Credentials(os.environ.get("BAM_API_KEY"), "https://bam-api.res.ibm.com/v1")
+
+    llm = LangChainInterface(
+                    model=WX_MODEL,
+                    credentials=creds,
+                    params=params,
+                )
+    return llm(prompt)
 def framework():
     guideline = {
         "2.6 活動、價值鏈和其他商業關係":"""揭露項目 2-6 活動、價值鏈和其他商業關係

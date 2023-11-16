@@ -86,7 +86,7 @@ def get_collection_list():
     client = chromadb.PersistentClient(path=os.environ.get("INDEX_NAME"))
     return [cols.name for cols in client.list_collections() if cols.name!="GRI"]
 
-def generate_standard_chain(vectorstore):
+def GenerateStandardChain(vectorstore):
 
     template = """[INST]<<SYS>>
     You'll be responsible for writing ESG (Environmental, Social, and Governance) reports, which are vital to our organization. We need to ensure that our ESG reports are accurate and transparent to meet the expectations of our shareholders and stakeholders. Let's get started.
@@ -118,24 +118,25 @@ def generate_standard_chain(vectorstore):
         | StrOutputParser()
     )
     return qa_chain
-def generate_esg_chain(user_prompt,qa_chain,vector_instance):
+def GenerateEsgChain(user_prompt,qa_chain,vector_instance):
     
     prompt = PromptTemplate.from_template(
         '''[INST]<<SYS>>
         Based on the past report,you should ONLY use the most relevant document 'Past Report' to summarize the key information that must contain in the report. Using following format to generate the report template.
         Format:
-        
-        1. Title of the report.
-        2. key information or essential field that should prensent in new report by given past report
+        Only use the 揭露項目 in STANDARD to generate answer.
+        1. Title of the standard
+        2. key information or essential field. 
         3. Add example to essure everyone understand the field.
-        4. what standard were followed by report
+        
         <</SYS>>
 
         % Past Report
         {summarize}
         % STANDARD
         {question}
-        Based on Past Report, generate New ESG Report: [/INST]'''
+        
+        ESG 報告模板: [/INST]'''
     )
 
     # chain2 = (
@@ -155,7 +156,7 @@ def generate_esg_chain(user_prompt,qa_chain,vector_instance):
     )
 
     return qa_chain_esg.invoke({"question": user_prompt}) 
-def translate_chain(text):
+def TranslateChain(text):
     prompt =  PromptTemplate.from_template("""
     English: The Board of Directors is responsible for overseeing the bank's operations, including its financial performance, risk management, and corporate governance practices.
     Chinese: 董事會負責監督銀行的運營，包括財務績效、風險管理和公司治理實務。

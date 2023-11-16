@@ -1,6 +1,6 @@
 import streamlit as st
 import numpy as np
-from esg_chain import generate_standard_chain,generate_esg_chain,framework,get_collection_list, vectorDB,translate_chain
+from esg_chain import GenerateStandardChain,GenerateEsgChain,framework,get_collection_list, vectorDB,TranslateChain,Generate
 
 
 st.title("ESG 報告建議")
@@ -16,25 +16,26 @@ if generate:
     with st.container():
         st.header("ESG GRI "+chapter)
         vector_gri = vectorDB("GRI")
-        qa_chain = generate_standard_chain(vector_gri.vectorstore())
+        qa_chain = GenerateStandardChain(vector_gri.vectorstore())
 
         vector_esg = vectorDB(collection)
 
     # You can call any Streamlit command, including custom components:
-        st.markdown( translate_chain(generate_esg_chain(user_prompt=framework()[chapter],qa_chain=qa_chain,vector_instance=vector_esg.vectorstore())))
-
+        res = TranslateChain(GenerateEsgChain(user_prompt=framework()[chapter],qa_chain=qa_chain,vector_instance=vector_esg.vectorstore()))
+        st.markdown(res+Generate("complete the following text in Markdown format:\n"+res))
 with st.container():
         st.header("ESG GRI 使用者輸入章節")
         vector_gri = vectorDB("GRI")
-        qa_chain = generate_standard_chain(vector_gri.vectorstore())
+        qa_chain = GenerateStandardChain(vector_gri.vectorstore())
 
         vector_esg = vectorDB(collection)
         col1, col2 = st.columns(2)
     # You can call any Streamlit command, including custom components:
         with col1:
             txt = st.text_area("ESG GRI Standard")
-        with col2:
-            st.markdown( translate_chain(generate_esg_chain(user_prompt=txt,qa_chain=qa_chain,vector_instance=vector_esg.vectorstore())))
+        if txt:
+            with col2:
+                st.markdown(TranslateChain(GenerateEsgChain(user_prompt=txt,qa_chain=qa_chain,vector_instance=vector_esg.vectorstore())))
 
     # with st.container():
     #     st.header("ESG GRI 2-1-b 的指引")
