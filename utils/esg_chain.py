@@ -171,7 +171,7 @@ def Generate(prompt):
         decoding_method="greedy",
         max_new_tokens=1024,
         min_new_tokens=1,
-        stop_sequences=["。\n\n"],
+        stop_sequences=["。\n\n","\n\n\n"],
         stream=False,
         top_k=50,
         top_p=1,

@@ -22,6 +22,9 @@ if generate:
 
     # You can call any Streamlit command, including custom components:
         res = TranslateChain(GenerateEsgChain(user_prompt=framework()[chapter],qa_chain=qa_chain,vector_instance=vector_esg.vectorstore()))
+        st.markdown("### Retrieved GRI Standard:")
+        st.text(qa_chain.invoke({"question":chapter}))
+        st.markdown("### ESG Report Suggestion:")
         st.markdown(res+Generate("complete the following text in Markdown format:\n"+res))
 with st.container():
         st.header("ESG GRI 使用者輸入章節")

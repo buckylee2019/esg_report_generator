@@ -17,7 +17,7 @@ from langchain.text_splitter import CharacterTextSplitter
 
 text_splitter = CharacterTextSplitter(
     separator = "。",
-    chunk_size = 250,
+    chunk_size = 300,
     chunk_overlap  = 20,
     length_function = len,
     is_separator_regex = False,
@@ -51,6 +51,7 @@ def extract_text_table(file):
 
     tables = []
     texts = []
+    all_text = ""
     # STEP 3
     # iterate over PDF pages
     for page_index in range(len(pdf_file)):
@@ -72,8 +73,8 @@ def extract_text_table(file):
             tables.append(json.dumps(table.extract(),ensure_ascii=False))
         texts.append(page.get_text())
 
-
-    return {"text":texts, "table":tables}
+        all_text = all_text + "Page "+ str(page_index) + ":\n" + page.get_text()
+    return {"text":all_text, "table":tables}
 
 def toDocuments(documents):
     langchain_doc = []
@@ -103,7 +104,7 @@ if __name__ == '__main__':
         if not INDEXED:
             extracted = extract_text_table(pdf)
             docstore = Chroma.from_documents(
-                    documents=toDocuments(extracted['text']),
+                    documents=toDocuments([extracted['text']]),
                     embedding=embeddings,
                     collection_name=collection_name,
                     persist_directory=os.environ.get("INDEX_NAME")
