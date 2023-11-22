@@ -6,6 +6,6 @@ load_dotenv()
 client = chromadb.PersistentClient(path=os.environ.get("INDEX_NAME"))
 for  cols in client.list_collections():
     
-    if cols.name !="GRI":
+    if "table" in cols.name :
         print(cols)
         client.delete_collection(name=cols.name)

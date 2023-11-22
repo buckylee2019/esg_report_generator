@@ -3,3 +3,4 @@ react_doc.ipynb
 .env
 __pycache__/*
 ESG_REPORT/*
+utils/table2json.py

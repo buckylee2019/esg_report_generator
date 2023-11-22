@@ -1,6 +1,6 @@
 import streamlit as st
 import numpy as np
-from utils.esg_chain import GenerateStandardChain,GenerateEsgChain,framework,get_collection_list, vectorDB,TranslateChain,Generate
+from utils.esg_chain_wx import GenerateStandardChain,GenerateEsgChain,framework,get_collection_list, vectorDB,TranslateChain,Generate
 
 
 st.title("ESG 報告建議")
@@ -14,7 +14,6 @@ st.write("Click to generate!")
 
 if generate:
     with st.container():
-        st.header("ESG GRI "+chapter)
         vector_gri = vectorDB("GRI")
         qa_chain = GenerateStandardChain(vector_gri.vectorstore())
 
@@ -22,10 +21,15 @@ if generate:
 
     # You can call any Streamlit command, including custom components:
         res = TranslateChain(GenerateEsgChain(user_prompt=framework()[chapter],qa_chain=qa_chain,vector_instance=vector_esg.vectorstore()))
-        st.markdown("### Retrieved GRI Standard:")
-        st.text(qa_chain.invoke({"question":chapter}))
+        
         st.markdown("### ESG Report Suggestion:")
         st.markdown(res+Generate("complete the following text in Markdown format:\n"+res))
+        st.markdown("### Retrieved GRI Standard:")
+        with st.expander("查看參考來源"):
+            source_document = qa_chain.invoke({"question":chapter})
+            st.markdown(f"""
+                {source_document}
+                """)
 with st.container():
         st.header("ESG GRI 使用者輸入章節")
         vector_gri = vectorDB("GRI")

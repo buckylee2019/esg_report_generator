@@ -15,13 +15,8 @@ from glob import glob
 import io
 from langchain.text_splitter import CharacterTextSplitter
 
-text_splitter = CharacterTextSplitter(
-    separator = "。",
-    chunk_size = 300,
-    chunk_overlap  = 20,
-    length_function = len,
-    is_separator_regex = False,
-)
+
+
 
 load_dotenv()
 
@@ -38,7 +33,6 @@ INDEX_NAME = os.getenv("INDEX_NAME")
 # )
 
 
-
 # STEP 2
 # file path you want to extract images from
 
@@ -51,7 +45,7 @@ def extract_text_table(file):
 
     tables = []
     texts = []
-    all_text = ""
+    all_text = []
     # STEP 3
     # iterate over PDF pages
     for page_index in range(len(pdf_file)):
@@ -71,15 +65,22 @@ def extract_text_table(file):
             # get the XREF of the image
             
             tables.append(json.dumps(table.extract(),ensure_ascii=False))
-        texts.append(page.get_text())
+        texts.append("Page "+ str(page_index) + ":\n" + page.get_text().replace("\n \n","\n"))
 
-        all_text = all_text + "Page "+ str(page_index) + ":\n" + page.get_text()
-    return {"text":all_text, "table":tables}
+        # all_text.extend(all_text + "Page "+ str(page_index) + ":\n" + page.get_text())
+    return {"text":texts, "table":tables}
 
-def toDocuments(documents):
+def toDocuments(documents,token_limit=300):
     langchain_doc = []
+    text_splitter = CharacterTextSplitter(
+    separator = "\n",
+    chunk_size = token_limit,
+    chunk_overlap  = 20,
+    length_function = len,
+    is_separator_regex = False,
+)
     for doc in documents:
-        if len(doc) > 300:
+        if len(doc) > token_limit:
             docs = text_splitter.create_documents([doc])
             langchain_doc.extend(docs)
         else:
@@ -94,21 +95,30 @@ if __name__ == '__main__':
 
     PDF_DIR = sys.argv[1]
     INDEXED = False
+    
     for pdf in glob(os.path.join(PDF_DIR, "*.pdf")):
         
         if "GRI" in PDF_DIR:
             collection_name = "GRI"
+            token_limit = 600 
         elif "ESG" in PDF_DIR:
             collection_name = pdf.split('/')[-1].split('.')[-2]
+            token_limit = 300
 
         if not INDEXED:
             extracted = extract_text_table(pdf)
             docstore = Chroma.from_documents(
-                    documents=toDocuments([extracted['text']]),
+                    documents=toDocuments(extracted['text'],token_limit=token_limit),
                     embedding=embeddings,
                     collection_name=collection_name,
                     persist_directory=os.environ.get("INDEX_NAME")
                 )
+            # docstore = Chroma.from_documents(
+            #         documents=toDocuments(extracted['table'],token_limit=token_limit),
+            #         embedding=embeddings,
+            #         collection_name=collection_name,
+            #         persist_directory=os.environ.get("INDEX_NAME")
+            #     )
         else:
             docstore = Chroma(
                     embedding_function=embeddings,
@@ -117,6 +127,6 @@ if __name__ == '__main__':
                 )
 
 
-    print(docstore.similarity_search("報導總部的所在位置:總部指的是一個組織的行政中心，其控制和指引組織本身。"))
+    print(docstore.similarity_search("GRI 永續性報導準則內容索引表"))
 
 
