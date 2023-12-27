@@ -41,9 +41,9 @@ else:
         "url": ibm_cloud_url,
         "apikey": api_key 
     }
-llm = Model(model_id="meta-llama/llama-2-70b-chat", credentials=creds, params=params, project_id=project_id).to_langchain()
+llm = Model(model_id=WX_MODEL, credentials=creds, params=params, project_id=project_id).to_langchain()
 
-embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
+embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-mpnet-base-v2")
 class vectorDB():
     def __init__(self,collection) -> None:
         self.collection_name = collection
@@ -213,41 +213,8 @@ def Generate(prompt,stop_sequences=["。\n\n","\n\n\n"]):
                 ).to_langchain()
     return llm(prompt)
 def framework():
-    guideline = {
-        "402-1 關於營運變化的最短預告期":"""
-        報導組織應報導以下資訊:
-            a. 在執行可能嚴重影響員工權利的重大營運變化前，提前通知員工及其代表的最短週數。
-            b. 對於有團體協約的組織，說明團體協約是否載明預告期以及諮詢和談判的相關條款。""",
-        
-        "404-1 每名員工每年接受訓練的平均時數": """報導組織應報導以下資訊:
-            a. 就下列劃分，組織員工在報導期間內接受訓練的平均時數:
-            i. ii.
-            性別; 員工類別。
-            2.1 彙編揭露項目404-1所定資訊時，報導組織宜:
-            2.1.1 員工總數用人數或全時等量法(FTE)來表示，並需在報導期間內以及不同期間保持 一致地揭露和應用。
-            2.1.2 使用GRI 2:一般揭露 2021中揭露項目2-7的資料來確定員工總數。
-            2.1.3 根據GRI 405:員工多元化與平等機會 2016中揭露項目405-1的資料確定每個類別的
-            員工總數。""",
-        "404-2 提升員工職能及過渡協助方案":"""
-            報導組織應報導以下資訊:
-            a. 提升員工職能而實施之方案以及提供之協助的類型和範疇。
-            b. 提供因退休或終止勞雇關係而結束職涯之員工，以促進繼續就業能力與生涯規劃之過渡協助方案。""",
-        "404-3 定期接受績效及職業發展檢核的員工百分比":"""
-            報導組織應報導以下資訊:
-            a.在報導期間內，按員工性別和員工類別，接受定期績效及職業發展檢視佔總員工的百分比。
-            2.2 彙編揭露項目404-3所定資訊時，報導組織宜:
-            2.2.1 使用GRI 2:一般揭露 2021中揭露項目2-7的資料說明員工總數。
-            2.2.2 根據GRI 405:員工多元化與平等機會 2016中揭露項目405-1的資料確定每個類別的員工總數。""",
-        "405-1 治理單位與員工的多元化":""" 報導組織應報導以下資訊 
-        a.就以下多元化類別，組織治理單位的成員百分比:
-            i. 性別;
-            ii. 年齡層:30歲以下、30-50歲、50歲以上;
-            iii. 其它相關的多元化指標(例如:少數或弱勢群體)。
-        b.就以下多元化類別，各項員工類別的員工百分比:
-            i. 性別;
-            ii. 年齡層:30歲以下、30-50歲、50歲以上;
-            iii. 其它相關的多元化指標(例如:少數或弱勢群體)。"""
-
-    }
+    with open("/app/guildeline/GRI.json") as f:
+        guideline = json.load(f)
+                              
     return guideline
 # generate_template("如果組織使用與法定名稱不同但眾所皆知的商業名稱時，則宜在其法定名稱外額外報導")
