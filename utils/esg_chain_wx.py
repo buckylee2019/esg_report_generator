@@ -55,6 +55,7 @@ class vectorDB():
                         persist_directory=os.environ.get("INDEX_NAME")
                     
             )
+        
         return vectorstore
 
 vectorstore_gri = Chroma(
@@ -64,11 +65,7 @@ vectorstore_gri = Chroma(
                     
             )
 
-# qa_chain= RetrievalQA.from_chain_type(
-#     llm=llm,
-#     chain_type="stuff",
-#     retriever=vectorstore.as_retriever(search_type="mmr", search_kwargs={'k': 3})
-# )
+
 DEFAULT_DOCUMENT_PROMPT = PromptTemplate.from_template(template="{page_content}")
 
 
@@ -126,12 +123,7 @@ def GenerateEsgChain(user_prompt,qa_chain,vector_instance):
         ESG 報告模板: [/INST]'''
     )
 
-    # chain2 = (
-    #     {"summarize": qa_chain, "question":itemgetter("question")}
-    #     | prompt2
-    #     | llm
-    #     | StrOutputParser()
-    # )
+
     qa_chain_esg = (
         {
             "summarize": qa_chain| vector_instance.as_retriever(search_type="mmr", search_kwargs={'k': 3})| _combine_documents,
@@ -153,7 +145,7 @@ def TranslateChain(text):
     GenParams.STOP_SEQUENCES:["\n\n\n"],
     # GenParams.TOP_K: 100,
     # GenParams.TOP_P: 1,
-    GenParams.REPETITION_PENALTY: 1
+    GenParams.REPETITION_PENALTY: 2
 }
     llm = Model(model_id="meta-llama/llama-2-70b-chat",
                 credentials=creds,

@@ -68,23 +68,3 @@ with st.container():
         if txt:
             with col2:
                 st.markdown(TranslateChain(GenerateEsgChain(user_prompt=txt,qa_chain=qa_chain,vector_instance=vector_esg.vectorstore())))
-
-    # with st.container():
-    #     st.header("ESG GRI 2-1-b 的指引")
-    #     st.markdown(generate_template("所有權的性質與法律形式意指屬於公有或私有，屬於法人實體、合夥企業、獨資企業或其他類型的實體(例如:非營利組織、協會或慈善機構)。"))
-
-   # You can call any Streamlit command, including custom components:
-    # col1, col2, col3 = st.columns(3)
-
-    # with col1:
-    #     st.header("A cat")
-    #     st.image("https://static.streamlit.io/examples/cat.jpg")
-
-    # with col2:
-    #     st.header("A dog")
-    #     st.image("https://static.streamlit.io/examples/dog.jpg")
-
-    # with col3:
-    #     st.header("An owl")
-    #     st.image("https://static.streamlit.io/examples/owl.jpg")
-

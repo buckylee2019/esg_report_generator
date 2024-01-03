@@ -1,4 +1,4 @@
-ibm-watson-machine-learning==1.0.327
+ibm-watson-machine-learning==1.0.339
 ipywidgets==8.0.7
 jupyter==1.0.0
 langchain==0.0.333
