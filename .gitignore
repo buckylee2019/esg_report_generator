@@ -1,7 +1,8 @@
 pdfs/*
 react_doc.ipynb
 .env
-__pycache__/*
+__pycache__/
+utils/__pycache__/*.pyc
 ESG_REPORT/*
 utils/table2json.py
 utils/esg_chain.py
