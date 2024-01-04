@@ -154,46 +154,46 @@ def TranslateChain(text):
     GenParams.MIN_NEW_TOKENS: 1,
     GenParams.MAX_NEW_TOKENS: 1024,
     GenParams.TEMPERATURE: 0,
-    GenParams.STOP_SEQUENCES:["\n\n\n"],
+    GenParams.STOP_SEQUENCES:["。\n\n\n","\n\n\n"],
     # GenParams.TOP_K: 100,
     # GenParams.TOP_P: 1,
-    GenParams.REPETITION_PENALTY: 2
+    GenParams.REPETITION_PENALTY: 1
 }
-    llm = Model(model_id="meta-llama/llama-2-70b-chat",
+    llm = Model(model_id=WX_MODEL,
                 credentials=creds,
                 params=params,
                 project_id=project_id
             ).to_langchain()
     prompt =  PromptTemplate.from_template(
-    '''[INST] <<SYS>>
-        You are a helpful, respectful and honest assistant.
-        Always answer as helpfully as possible, while being safe.
-        Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content.
-        Please ensure that your responses are socially unbiased and positive in nature.
-        
-        If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct.
-        If you don't know the answer to a question, please don't share false information.
-        
-        Translate from English to Chinese as the following example:
-        English: The Board of Directors is responsible for overseeing the bank's operations, including its financial performance, risk management, and corporate governance practices.
-        Chinese: 董事會負責監督銀行的運營，包括財務績效、風險管理和公司治理實務。\n
-        English: The board members' tenure is 3 years, and they can be re-elected for a maximum of 2 consecutive terms.
-        Chinese: 董事會成員任期3年，最多可連任2屆。\n
-        English: {original_text}
-        Chinese: ''')
+        "INST] <<SYS>>\n"
+        "You are a helpful, respectful and honest assistant.\n"
+        "Always answer as helpfully as possible, while being safe.\n"
+        "Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content.\n"
+        "Please ensure that your responses are socially unbiased and positive in nature.\n"
+        "\n"
+        "If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct.\n"
+        "If you don't know the answer to a question, please don't share false information.\n"
+        "\n"
+        "Translate from English to Chinese as the following example:\n"
+        "English: <<<The Board of Directors is responsible for overseeing the bank's operations, including its financial performance, risk management, and corporate governance practices.>>>\n"
+        "Chinese: 董事會負責監督銀行的運營，包括財務績效、風險管理和公司治理實務。\n\n"
+        "English: <<<The board members' tenure is 3 years, and they can be re-elected for a maximum of 2 consecutive terms.>>>\n"
+        "Chinese: 董事會成員任期3年，最多可連任2屆。\n\n"
+        "English: <<<{original_text}>>>\n"
+        "Chinese: ")
     trans = (
         {"original_text": itemgetter("original_text")}
         | prompt
         | llm
         | StrOutputParser()
     )
-    return trans.invoke({"original_text": text})
+    return trans.invoke({"original_text": text.lstrip()})
 
 def Generate(prompt,stop_sequences=["。\n\n","\n\n\n"]):
     params = {
     GenParams.DECODING_METHOD: DecodingMethods.GREEDY,
-    GenParams.MIN_NEW_TOKENS: 30,
-    GenParams.MAX_NEW_TOKENS: 1024,
+    GenParams.MIN_NEW_TOKENS: 1,
+    GenParams.MAX_NEW_TOKENS: 512,
     GenParams.TEMPERATURE: 0,
     GenParams.STOP_SEQUENCES:stop_sequences,
     # GenParams.TOP_K: 100,

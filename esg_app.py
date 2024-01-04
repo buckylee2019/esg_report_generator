@@ -1,6 +1,10 @@
 import streamlit as st
 import numpy as np
+import re
 from utils.esg_chain_wx import GenerateStandardChain,GenerateEsgChain,framework,get_collection_list, vectorDB,TranslateChain,Generate
+# from utils.esg_chain import GenerateStandardChain,GenerateEsgChain,framework,get_collection_list, vectorDB,TranslateChain,Generate
+
+
 import os
 from utils.pdf2doc import extract_text_table, toDocuments, embeddings
 from langchain.vectorstores import Chroma
@@ -48,10 +52,16 @@ if generate:
         res = TranslateChain(GenerateEsgChain(user_prompt=framework()[chapter],qa_chain=qa_chain,vector_instance=vector_esg.vectorstore()))
         
         st.markdown("### ESG Report Suggestion:")
-        st.markdown(res+Generate("complete the following text in Markdown format:\n"+res))
+        if res.strip().endswith("。"):
+            
+            st.markdown(res)
+        else:
+            st.markdown(res+Generate("complete the following text in Markdown format:\n"+res))
+        
         st.markdown("### Retrieved GRI Standard:")
         with st.expander("查看參考來源"):
-            source_document = qa_chain.invoke({"question":chapter})
+            source_document = "".join([f"### 文件 {str(index+1)}:\n {d.page_content}\n\n" for index,d in enumerate(vector_esg.vectorstore().similarity_search(framework()[chapter],k=3))])
+            
             st.markdown(f"""
                 {source_document}
                 """)
@@ -67,4 +77,4 @@ with st.container():
             txt = st.text_area("ESG GRI Standard")
         if txt:
             with col2:
-                st.markdown(TranslateChain(GenerateEsgChain(user_prompt=txt,qa_chain=qa_chain,vector_instance=vector_esg.vectorstore())))
+                st.markdown(GenerateEsgChain(user_prompt=txt,qa_chain=qa_chain,vector_instance=vector_esg.vectorstore()))
