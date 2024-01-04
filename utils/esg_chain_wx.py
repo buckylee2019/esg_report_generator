@@ -9,6 +9,7 @@ from glob import glob
 import os
 from langchain.schema import format_document
 from langchain.embeddings import HuggingFaceEmbeddings
+from langchain.embeddings import HuggingFaceHubEmbeddings
 from langchain.prompts import PromptTemplate
 from operator import itemgetter
 from langchain.schema import StrOutputParser
@@ -34,6 +35,8 @@ WX_MODEL = os.environ.get("WX_MODEL")
 api_key = os.getenv("API_KEY", None)
 ibm_cloud_url = os.getenv("IBM_CLOUD_URL", None)
 project_id = os.getenv("PROJECT_ID", None)
+HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+
 if api_key is None or ibm_cloud_url is None or project_id is None:
     print("Ensure you copied the .env file that you created earlier into the same directory as this notebook")
 else:
@@ -43,7 +46,16 @@ else:
     }
 llm = Model(model_id=WX_MODEL, credentials=creds, params=params, project_id=project_id).to_langchain()
 
-embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-mpnet-base-v2")
+if HUGGINGFACEHUB_API_TOKEN!="":
+    repo_id = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+    embeddings = HuggingFaceHubEmbeddings(
+        task="feature-extraction",
+        repo_id = repo_id,
+        huggingfacehub_api_token = HUGGINGFACEHUB_API_TOKEN,
+    )
+else:
+    embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-mpnet-base-v2")
+
 class vectorDB():
     def __init__(self,collection) -> None:
         self.collection_name = collection
@@ -152,22 +164,23 @@ def TranslateChain(text):
                 params=params,
                 project_id=project_id
             ).to_langchain()
-    prompt =  PromptTemplate.from_template("INST] <<SYS>>\n"\
-    "You are a helpful, respectful and honest assistant.\n"\
-    "Always answer as helpfully as possible, while being safe.\n"\
-    "Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content.\n"\
-    "Please ensure that your responses are socially unbiased and positive in nature.\n"\
-    "\n"\
-    "If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct.\n"\
-    "If you don't know the answer to a question, please don't share false information.\n"\
-    "\n"\
-    "Translate from English to Chinese as the following example:\n"\
-    "English: The Board of Directors is responsible for overseeing the bank's operations, including its financial performance, risk management, and corporate governance practices.\n"\
-    "Chinese: 董事會負責監督銀行的運營，包括財務績效、風險管理和公司治理實務。\n\n"\
-    "English: The board members' tenure is 3 years, and they can be re-elected for a maximum of 2 consecutive terms.\n"\
-    "Chinese: 董事會成員任期3年，最多可連任2屆。\n\n"\
-    "English: {original_text}\n"\
-    "Chinese: ")
+    prompt =  PromptTemplate.from_template(
+    '''[INST] <<SYS>>
+        You are a helpful, respectful and honest assistant.
+        Always answer as helpfully as possible, while being safe.
+        Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content.
+        Please ensure that your responses are socially unbiased and positive in nature.
+        
+        If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct.
+        If you don't know the answer to a question, please don't share false information.
+        
+        Translate from English to Chinese as the following example:
+        English: The Board of Directors is responsible for overseeing the bank's operations, including its financial performance, risk management, and corporate governance practices.
+        Chinese: 董事會負責監督銀行的運營，包括財務績效、風險管理和公司治理實務。\n
+        English: The board members' tenure is 3 years, and they can be re-elected for a maximum of 2 consecutive terms.
+        Chinese: 董事會成員任期3年，最多可連任2屆。\n
+        English: {original_text}
+        Chinese: ''')
     trans = (
         {"original_text": itemgetter("original_text")}
         | prompt

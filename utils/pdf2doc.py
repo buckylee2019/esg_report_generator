@@ -22,15 +22,19 @@ load_dotenv()
 
 
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
-embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-mpnet-base-v2")
+
 INDEX_NAME = os.getenv("INDEX_NAME")
 
 
-# hf = HuggingFaceHubEmbeddings(
-#     task="feature-extraction",
-#     repo_id = repo_id,
-#     huggingfacehub_api_token = HUGGINGFACEHUB_API_TOKEN,
-# )
+if HUGGINGFACEHUB_API_TOKEN!="":
+    repo_id = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+    embeddings = HuggingFaceHubEmbeddings(
+        task="feature-extraction",
+        repo_id = repo_id,
+        huggingfacehub_api_token = HUGGINGFACEHUB_API_TOKEN,
+    )
+else:
+    embeddings = HuggingFaceEmbeddings(model_name="paraphrase-multilingual-mpnet-base-v2")
 
 
 # STEP 2
